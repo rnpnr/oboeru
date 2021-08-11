@@ -225,7 +225,7 @@ review_loop(const char *fifo)
 	char reply[BUF_SIZE];
 	int fd;
 	size_t i, j, n;
-	struct timespec wait = { .tv_sec = 0, .tv_nsec = 50 * 10e6 };
+	struct timespec wait = { .tv_sec = 0, .tv_nsec = 50e6 };
 	struct { const char *str; int status; } reply_map[] = {
 		{ .str = "pass", .status = CARD_PASS },
 		{ .str = "fail", .status = CARD_FAIL }
