@@ -300,7 +300,7 @@ main(int argc, char *argv[])
 
 	ARGBEGIN {
 	case 'c':
-		cflag = 2;
+		cflag = 1;
 		break;
 	case 'd':
 		dflag = 1;
