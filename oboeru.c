@@ -143,30 +143,37 @@ needs_review(Card *card)
 	return 1;
 }
 
-static void
+static Card **
 add_review(Card *c)
 {
 	Card **r = reviews;
+
 	r = xreallocarray(r, ++n_reviews, sizeof(Card **));
 	r[n_reviews - 1] = c;
 	reviews = r;
+
+	return r;
 }
 
-static void
+static Card **
 mkreviews(Node *node)
 {
+	Card **r = NULL;
+
 	for (; node; node = node->next)
 		if (node->card && needs_review(node->card))
-			add_review(node->card);
+			r = add_review(node->card);
+
+	return r;
 }
 
-static void
-bump_card(Card *card, int status)
+static int8_t
+bump_card(Card *card, int8_t status)
 {
 	int64_t diff;
 
-	if (card->nobump)
-		return;
+	if (card->nobump && status != CARD_FAIL)
+		return 0;
 
 	diff = card->due - card->created;
 	if (diff < 0)
@@ -176,18 +183,18 @@ bump_card(Card *card, int status)
 	case CARD_PASS:
 		if (diff < MINIMUM_INCREASE) {
 			card->due += MINIMUM_INCREASE;
-			add_review(card);
-			card->nobump = 1;
+			return 1;
 		} else
 			card->due += diff * GROWTH_RATE;
 		break;
 	case CARD_FAIL:
-		if (diff > LEECH_AGE)
+		if (diff > LEECH_AGE && !card->nobump)
 			card->leeches++;
 		card->due += diff * SHRINK_RATE;
-		add_review(card);
-		card->nobump = 1;
+		return 1;
 	}
+
+	return 0;
 }
 
 static void
@@ -243,14 +250,17 @@ review_loop(const char *fifo)
 
 		for (j = 0; j < LEN(reply_map); j++)
 			if (!strcmp(reply, reply_map[j].str))
-				bump_card(r[i], reply_map[j].status);
+				r[i]->nobump = bump_card(r[i], reply_map[j].status);
+
+		/* if the card wasn't bumped it needs an extra review */
+		if (r[i]->nobump)
+			r = add_review(r[i]);
 
 		/* give the writing process time to close its fd */
 		nanosleep(&wait, NULL);
-
-		/* reviews can change in bump card */
-		r = reviews;
 	}
+
+	reviews = r;
 }
 
 static void
@@ -330,7 +340,7 @@ main(int argc, char *argv[])
 		tail = parse_file(*argv, tail, deck_id);
 	}
 
-	mkreviews(head);
+	reviews = mkreviews(head);
 	if (cflag) {
 		cleanup();
 		die("Cards Due: %ld\n", n_reviews);
