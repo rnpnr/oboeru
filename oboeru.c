@@ -73,6 +73,7 @@ static void
 cleanup(void)
 {
 	freenodes(head);
+	free(decks);
 }
 
 /* returns a filled out Card * after parsing */
