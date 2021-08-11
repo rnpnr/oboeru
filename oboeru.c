@@ -41,8 +41,6 @@ static const char *logfmt = "%05ld" DELIM "%s" DELIM "%s" DELIM "%d" DELIM "%s\n
 
 static Node *head;
 static size_t n_reviews;
-static const char **decks;
-static size_t n_decks;
 
 /* option parsing variables */
 char *argv0;
@@ -73,7 +71,6 @@ static void
 cleanup(void)
 {
 	freenodes(head);
-	free(decks);
 }
 
 /* returns a filled out Card * after parsing */
@@ -214,7 +211,7 @@ shuffle_reviews(Card *r[])
 }
 
 static Card **
-review_loop(Card *r[], const char *fifo)
+review_loop(Card *r[], const char *decks[], const char *fifo)
 {
 	char reply[BUF_SIZE];
 	int fd;
@@ -257,7 +254,7 @@ review_loop(Card *r[], const char *fifo)
 }
 
 static void
-write_deck(size_t deck_id)
+write_deck(const char *deck, size_t deck_id)
 {
 	FILE *fp;
 	Node *node;
@@ -266,10 +263,10 @@ write_deck(size_t deck_id)
 	char path[PATH_MAX];
 
 	if (dflag) {
-		snprintf(path, sizeof(path), "%s.debug", decks[deck_id]);
+		snprintf(path, sizeof(path), "%s.debug", deck);
 		fp = fopen(path, "w+");
 	} else {
-		fp = fopen(decks[deck_id], "w");
+		fp = fopen(deck, "w");
 	}
 
 	if (!fp)
@@ -297,8 +294,8 @@ main(int argc, char *argv[])
 {
 	Node *tail;
 	Card **reviews;
-	size_t deck_id;
-	const char *fifo = NULL;
+	size_t i, n_decks = 0;
+	const char *fifo = NULL, **decks = NULL;
 	struct stat sb;
 
 	ARGBEGIN {
@@ -327,11 +324,11 @@ main(int argc, char *argv[])
 	tail = head = xmalloc(sizeof(Node));
 
 	/* remaining argv elements are deck jsons */
-	for (deck_id = 0; argc && *argv; argv++, deck_id++, argc--) {
+	for (i = 0; argc && *argv; argv++, i++, argc--) {
 		decks = xreallocarray(decks, ++n_decks, sizeof(char *));
-		decks[deck_id] = *argv;
+		decks[i] = *argv;
 
-		tail = parse_file(*argv, tail, deck_id);
+		tail = parse_file(*argv, tail, i);
 	}
 
 	reviews = mkreviews(head);
@@ -342,11 +339,11 @@ main(int argc, char *argv[])
 	}
 
 	shuffle_reviews(reviews);
-	reviews = review_loop(reviews, fifo);
+	reviews = review_loop(reviews, decks, fifo);
 
 	/* write updated data into deck files */
-	for (deck_id = 0; deck_id < n_decks; deck_id++)
-		write_deck(deck_id);
+	for (i = 0; i < n_decks; i++)
+		write_deck(decks[i], i);
 
 	cleanup();
 	free(reviews);
