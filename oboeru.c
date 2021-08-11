@@ -40,7 +40,6 @@ static const char *scanfmt = "%ld" DELIM "%s" DELIM "%s" DELIM "%d" DELIM "%[^\n
 static const char *logfmt = "%05ld" DELIM "%s" DELIM "%s" DELIM "%d" DELIM "%s\n";
 
 static Node *head;
-static Card **reviews;
 static size_t n_reviews;
 static const char **decks;
 static size_t n_decks;
@@ -74,8 +73,6 @@ static void
 cleanup(void)
 {
 	freenodes(head);
-	free(reviews);
-	reviews = NULL;
 }
 
 /* returns a filled out Card * after parsing */
@@ -144,13 +141,10 @@ needs_review(Card *card)
 }
 
 static Card **
-add_review(Card *c)
+add_review(Card *r[], Card *c)
 {
-	Card **r = reviews;
-
 	r = xreallocarray(r, ++n_reviews, sizeof(Card **));
 	r[n_reviews - 1] = c;
-	reviews = r;
 
 	return r;
 }
@@ -162,7 +156,7 @@ mkreviews(Node *node)
 
 	for (; node; node = node->next)
 		if (node->card && needs_review(node->card))
-			r = add_review(node->card);
+			r = add_review(r, node->card);
 
 	return r;
 }
@@ -198,10 +192,10 @@ bump_card(Card *card, int8_t status)
 }
 
 static void
-shuffle_reviews(void)
+shuffle_reviews(Card *r[])
 {
 	size_t i, j;
-	Card *t, **r = reviews;
+	Card *t;
 
 	if (n_reviews <= 1)
 		return;
@@ -218,10 +212,9 @@ shuffle_reviews(void)
 	}
 }
 
-static void
-review_loop(const char *fifo)
+static Card **
+review_loop(Card *r[], const char *fifo)
 {
-	Card **r = reviews;
 	char reply[BUF_SIZE];
 	int fd;
 	size_t i, j, n;
@@ -237,7 +230,7 @@ review_loop(const char *fifo)
 		reply[0] = 0;
 		fd = open(fifo, O_RDONLY);
 		if (fd == -1)
-			return;
+			break;
 		n = read(fd, reply, sizeof(reply));
 		close(fd);
 
@@ -246,7 +239,7 @@ review_loop(const char *fifo)
 			reply[n-1] = 0;
 
 		if (!strcmp(reply, "quit"))
-			return;
+			break;
 
 		for (j = 0; j < LEN(reply_map); j++)
 			if (!strcmp(reply, reply_map[j].str))
@@ -254,13 +247,12 @@ review_loop(const char *fifo)
 
 		/* if the card wasn't bumped it needs an extra review */
 		if (r[i]->nobump)
-			r = add_review(r[i]);
+			r = add_review(r, r[i]);
 
 		/* give the writing process time to close its fd */
 		nanosleep(&wait, NULL);
 	}
-
-	reviews = r;
+	return r;
 }
 
 static void
@@ -303,6 +295,7 @@ int
 main(int argc, char *argv[])
 {
 	Node *tail;
+	Card **reviews;
 	size_t deck_id;
 	const char *fifo = NULL;
 	struct stat sb;
@@ -341,19 +334,21 @@ main(int argc, char *argv[])
 	}
 
 	reviews = mkreviews(head);
-	if (cflag) {
+	if (reviews == NULL || cflag) {
 		cleanup();
+		free(reviews);
 		die("Cards Due: %ld\n", n_reviews);
 	}
 
-	shuffle_reviews();
-	review_loop(fifo);
+	shuffle_reviews(reviews);
+	reviews = review_loop(reviews, fifo);
 
 	/* write updated data into deck files */
 	for (deck_id = 0; deck_id < n_decks; deck_id++)
 		write_deck(deck_id);
 
 	cleanup();
+	free(reviews);
 
 	return 0;
 }
