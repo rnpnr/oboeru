@@ -335,6 +335,7 @@ main(int argc, char *argv[])
 	if (reviews == NULL || cflag) {
 		cleanup();
 		free(reviews);
+		free(decks);
 		die("Cards Due: %ld\n", n_reviews);
 	}
 
@@ -347,6 +348,7 @@ main(int argc, char *argv[])
 
 	cleanup();
 	free(reviews);
+	free(decks);
 
 	return 0;
 }
