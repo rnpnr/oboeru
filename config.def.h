@@ -17,5 +17,8 @@
 /* should be < 1. this leads to exponential decay */
 #define SHRINK_RATE (0.66)
 
+/* card id formatting. needs to use ld */
+#define CARDID "%05ld"
+
 /* format for times in the output deck file */
 const char *timefmt = "%Y年%m月%d日%H時%M分";

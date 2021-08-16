@@ -37,7 +37,7 @@ typedef struct node {
 } Node;
 
 static const char *scanfmt = "%ld" DELIM "%s" DELIM "%s" DELIM "%d" DELIM "%[^\n]";
-static const char *logfmt = "%05ld" DELIM "%s" DELIM "%s" DELIM "%d" DELIM "%s\n";
+static const char *logfmt = CARDID DELIM "%s" DELIM "%s" DELIM "%d" DELIM "%s\n";
 
 static Node *head;
 static size_t n_reviews;
@@ -223,7 +223,7 @@ review_loop(Card *r[], const char *decks[], const char *fifo)
 	};
 
 	for (i = 0; i < n_reviews; i++) {
-		fprintf(stdout, "%s\t%ld\n", decks[r[i]->deck], r[i]->id);
+		fprintf(stdout, "%s\t"CARDID"\n", decks[r[i]->deck], r[i]->id);
 
 		reply[0] = 0;
 		fd = open(fifo, O_RDONLY);
