@@ -17,7 +17,7 @@ $(OBOERU_OBJ): config.h
 oboeru: $(OBOERU_OBJ)
 	$(CC) -o $@ $(OBOERU_OBJ) $(LDFLAGS)
 
-oboeruhttp:
+oboeruhttp: oboeruhttp.go
 	go build -ldflags "$(GOLDFLAGS)" $@.go
 
 install: oboeru

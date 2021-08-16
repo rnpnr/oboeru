@@ -107,11 +107,12 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	html_midf = strings.Join([]string{"<a href='/quit'>", *quit,
-				"</a> · <a href='/show'>", *show, "</a>"}, "")
-	html_midb = strings.Join([]string{"<a href='/fail'>", *fail, 
-				"</a> · <a href='/quit'>", *quit,
-				"</a> · <a href='/pass'>", *pass, "</a>"}, "")
+	html_midf = strings.Join([]string{"<div class='link'><a href='/quit'>",
+				*quit, "</a> · <a href='/show'>", *show,
+				"</a></div>"}, "")
+	html_midb = strings.Join([]string{"<div class='link'><a href='/fail'>",
+				*fail, "</a> · <a href='/quit'>", *quit,
+				"</a> · <a href='/pass'>", *pass, "</a></div>"}, "")
 	html_quit = *bye
 
 	ctx, cancel = context.WithCancel(context.Background())
