@@ -1,4 +1,4 @@
-# oboeru
+# oboeru - 覚える
 A collection of simple tools for reviewing flashcards.
 
 Inspired by [oboeta](https://github.com/jtvaughan/oboeta).
@@ -90,4 +90,5 @@ to install (using root as needed):
 	make clean install
 
 ## Example Usage
-_coming soon_
+See [omoidasu](https://github.com/0x766F6964/omoidasu) for one example
+of how to use these programs.
