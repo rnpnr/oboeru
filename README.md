@@ -48,7 +48,7 @@ code is as follows (some parts omitted):
 	static void
 	bump_card(Card *card, int status)
 	{
-		diff = card->due - card->created;
+		diff = card->due - card->reviewed;
 		switch (status) {
 		case CARD_PASS:
 			if (diff < MINIMUM_INCREASE)
@@ -61,6 +61,7 @@ code is as follows (some parts omitted):
 				card->leeches++;
 			card->due += diff * SHRINK_RATE;
 		}
+		card->reviewed = time(NULL);
 	}
 
 Take for example a card with an interval of 6 days, `GROWTH_RATE = 1.8`,
@@ -75,7 +76,7 @@ and `SHRINK_RATE = 0.66` (simplified for readability):
 The format for storing the ledgers is 1 card per line with fields tab
 separated. An example follows:
 
-	# id	created			due			leeches	extra
+	# id	reviewed		due			leeches	extra
 	23	2021年07月09日16時18分	2021年08月09日05時01分	3	全て
 	0099	2021年07月09日14時18分	2021年08月11日14時19分	0	飲み込む
 

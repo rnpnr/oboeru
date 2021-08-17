@@ -26,7 +26,7 @@ typedef struct {
 	size_t id, deck;
 	int leeches;
 	/* seconds since epoch */
-	int64_t created, due;
+	int64_t reviewed, due;
 	char *extra;
 	int8_t nobump;
 } Card;
@@ -78,15 +78,15 @@ static Card *
 parse_line(const char *line)
 {
 	struct tm tm;
-	char created[BUF_SIZE], due[BUF_SIZE];
+	char reviewed[BUF_SIZE], due[BUF_SIZE];
 	Card *c = xmalloc(sizeof(Card));
 	c->extra = xmalloc(BUF_SIZE);
 
-	sscanf(line, scanfmt, &c->id, created, due, &c->leeches, c->extra);
+	sscanf(line, scanfmt, &c->id, reviewed, due, &c->leeches, c->extra);
 
 	memset(&tm, 0, sizeof(tm));
-	strptime(created, timefmt, &tm);
-	c->created = timegm(&tm);
+	strptime(reviewed, timefmt, &tm);
+	c->reviewed = timegm(&tm);
 
 	memset(&tm, 0, sizeof(tm));
 	strptime(due, timefmt, &tm);
@@ -164,10 +164,12 @@ bump_card(Card *card, int8_t status)
 {
 	int64_t diff;
 
-	if (card->nobump && status != CARD_FAIL)
+	if (card->nobump && status != CARD_FAIL) {
+		card->reviewed = time(NULL);
 		return 0;
+	}
 
-	diff = card->due - card->created;
+	diff = card->due - card->reviewed;
 	if (diff < 0)
 		fprintf(stderr, "card id: %ld: malformed review time\n", card->id);
 
@@ -176,8 +178,10 @@ bump_card(Card *card, int8_t status)
 		if (diff < MINIMUM_INCREASE) {
 			card->due += MINIMUM_INCREASE;
 			return 1;
-		} else
+		} else {
 			card->due += diff * GROWTH_RATE;
+			card->reviewed = time(NULL);
+		}
 		break;
 	case CARD_FAIL:
 		if (diff > LEECH_AGE && !card->nobump)
@@ -259,7 +263,7 @@ write_deck(const char *deck, size_t deck_id)
 	FILE *fp;
 	Node *node;
 	Card *c;
-	char created[BUF_SIZE], due[BUF_SIZE];
+	char reviewed[BUF_SIZE], due[BUF_SIZE];
 	char path[PATH_MAX];
 
 	if (dflag) {
@@ -277,12 +281,12 @@ write_deck(const char *deck, size_t deck_id)
 		if (!c || (c->deck != deck_id))
 			continue;
 
-		strftime(created, sizeof(created), timefmt,
-			gmtime((time_t *)&c->created));
+		strftime(reviewed, sizeof(reviewed), timefmt,
+			gmtime((time_t *)&c->reviewed));
 		strftime(due, sizeof(due), timefmt,
 			gmtime((time_t *)&c->due));
 
-		fprintf(fp, logfmt, c->id, created, due,
+		fprintf(fp, logfmt, c->id, reviewed, due,
 			c->leeches, c->extra);
 	}
 	fclose(fp);
