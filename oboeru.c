@@ -163,9 +163,10 @@ static int8_t
 bump_card(Card *card, int8_t status)
 {
 	int64_t diff;
+	time_t t = time(NULL);
 
 	if (card->nobump && status != CARD_FAIL) {
-		card->reviewed = time(NULL);
+		card->reviewed = t;
 		return 0;
 	}
 
@@ -179,14 +180,14 @@ bump_card(Card *card, int8_t status)
 			card->due += MINIMUM_INCREASE;
 			return 1;
 		} else {
-			card->due += diff * GROWTH_RATE;
-			card->reviewed = time(NULL);
+			card->due = t + diff * GROWTH_RATE;
+			card->reviewed = t;
 		}
 		break;
 	case CARD_FAIL:
 		if (diff > LEECH_AGE && !card->nobump)
 			card->leeches++;
-		card->due += diff * SHRINK_RATE;
+		card->due = t + diff * SHRINK_RATE;
 		return 1;
 	}
 
