@@ -79,9 +79,8 @@ func response(w http.ResponseWriter, r *http.Request) {
 }
 
 func serve(w http.ResponseWriter, r *http.Request) {
-	var card []string
 	if cardlock == false {
-		card = get_next_card()
+		card := get_next_card()
 		if len(card) != 2 {
 			quit(w)
 		}

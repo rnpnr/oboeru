@@ -229,6 +229,8 @@ review_loop(Card *r[], const char *decks[], const char *fifo)
 
 	for (i = 0; i < n_reviews; i++) {
 		fprintf(stdout, "%s\t"CARDID"\n", decks[r[i]->deck], r[i]->id);
+		/* force a flush before blocking in open() */
+		fflush(stdout);
 
 		reply[0] = 0;
 		fd = open(fifo, O_RDONLY);
