@@ -4,7 +4,9 @@ include config.mk
 OBOERU_SRC = oboeru.c util.c
 OBOERU_OBJ = $(OBOERU_SRC:.c=.o)
 
-default: oboeru oboerudata oboeruhttp
+BINS = oboeru oboerudata oboeruhttp
+
+default: $(BINS)
 
 config.h:
 	cp config.def.h $@
@@ -22,19 +24,13 @@ oboerudata: oboerudata.go
 oboeruhttp: oboeruhttp.go
 	go build -ldflags "$(GOLDFLAGS)" $@.go
 
-install: oboeru oboerudata oboeruhttp
+install: $(BINS)
 	mkdir -p $(PREFIX)/bin
-	cp oboeru $(PREFIX)/bin
-	cp oboerudata $(PREFIX)/bin
-	cp oboeruhttp $(PREFIX)/bin
-	chmod 755 $(PREFIX)/bin/oboeru
-	chmod 755 $(PREFIX)/bin/oboerudata
-	chmod 755 $(PREFIX)/bin/oboeruhttp
+	cp $(BINS) $(PREFIX)/bin
+	chmod 755 $(BINS:%=$(PREFIX)/bin/%)
 
 uninstall:
-	rm $(PREFIX)/bin/oboeru
-	rm $(PREFIX)/bin/oboerudata
-	rm $(PREFIX)/bin/oboeruhttp
+	rm $(BINS:%=$(PREFIX)/bin/%)
 
 clean:
-	rm *.o oboeru oboerudata oboeruhttp
+	rm *.o $(BINS)
