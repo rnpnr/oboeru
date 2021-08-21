@@ -165,30 +165,34 @@ bump_card(Card *card, int8_t status)
 	int64_t diff;
 	time_t t = time(NULL);
 
-	if (card->nobump && status != CARD_FAIL) {
-		card->reviewed = t;
+	if (card->nobump && status != CARD_FAIL)
 		return 0;
-	}
 
 	diff = card->due - card->reviewed;
 	if (diff < 0)
 		fprintf(stderr, "card id: %ld: malformed review time\n", card->id);
 
+	/* only hit this on the first time through */
+	if (!card->nobump)
+		card->reviewed = t;
+
 	switch (status) {
 	case CARD_PASS:
 		if (diff < MINIMUM_INCREASE) {
-			/* + extra 90s so we don't hit this branch twice */
-			card->due = t + MINIMUM_INCREASE + 90;
+			/* extra 1s to avoid rounding errors */
+			card->due = t + MINIMUM_INCREASE + 1;
 			return 1;
-		} else {
-			card->due = t + diff * GROWTH_RATE;
-			card->reviewed = t;
 		}
+		card->due = t + diff * GROWTH_RATE;
 		break;
 	case CARD_FAIL:
 		if (diff > LEECH_AGE && !card->nobump)
 			card->leeches++;
-		card->due = t + diff * SHRINK_RATE;
+
+		if (diff * SHRINK_RATE < MINIMUM_INCREASE)
+			card->due = t + MINIMUM_INCREASE + 1;
+		else
+			card->due = t + diff * SHRINK_RATE;
 		return 1;
 	}
 
