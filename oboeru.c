@@ -177,7 +177,8 @@ bump_card(Card *card, int8_t status)
 	switch (status) {
 	case CARD_PASS:
 		if (diff < MINIMUM_INCREASE) {
-			card->due = t + MINIMUM_INCREASE;
+			/* + extra 90s so we don't hit this branch twice */
+			card->due = t + MINIMUM_INCREASE + 90;
 			return 1;
 		} else {
 			card->due = t + diff * GROWTH_RATE;
