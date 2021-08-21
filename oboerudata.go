@@ -54,8 +54,12 @@ func wait_and_print(fifo string) {
 			m[deck] = makemap(split[0])
 		}
 
-		str, _ := m[deck][key]
+		if m[deck] == nil {
+			fmt.Fprintln(os.Stderr, "Data for deck doesn't exist:", deck)
+			os.Exit(1)
+		}
 
+		str, _ := m[deck][key]
 		fmt.Fprintln(os.Stdout, str)
 
 		f.Close()
