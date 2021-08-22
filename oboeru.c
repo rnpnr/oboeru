@@ -200,19 +200,19 @@ bump_card(Card *card, int8_t status)
 }
 
 static void
-shuffle_reviews(Card *r[])
+shuffle_reviews(Card *r[], size_t n)
 {
 	size_t i, j;
 	Card *t;
 
-	if (n_reviews <= 1)
+	if (n <= 1)
 		return;
 
 	srand(time(NULL));
 
 	/* this could be improved */
-	for (i = 0; i < n_reviews; i++) {
-		j = i + rand() % (n_reviews - i);
+	for (i = 0; i < n; i++) {
+		j = i + rand() % (n - i);
 
 		t = r[j];
 		r[j] = r[i];
@@ -256,8 +256,11 @@ review_loop(Card *r[], const char *decks[], const char *fifo)
 				r[i]->nobump = bump_card(r[i], reply_map[j].status);
 
 		/* if the card wasn't bumped it needs an extra review */
-		if (r[i]->nobump)
+		if (r[i]->nobump) {
 			r = add_review(r, r[i]);
+			/* r[i+1] exists because we have added a review */
+			shuffle_reviews(&r[i + 1], n_reviews - i - 1);
+		}
 
 		/* give the writing process time to close its fd */
 		nanosleep(&wait, NULL);
@@ -351,7 +354,7 @@ main(int argc, char *argv[])
 		die("Cards Due: %ld\n", n_reviews);
 	}
 
-	shuffle_reviews(reviews);
+	shuffle_reviews(reviews, n_reviews);
 	reviews = review_loop(reviews, decks, fifo);
 
 	/* write updated data into deck files */
