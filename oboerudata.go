@@ -59,7 +59,11 @@ func wait_and_print(fifo string) {
 			os.Exit(1)
 		}
 
-		str, _ := m[deck][key]
+		str, ok := m[deck][key]
+		if !ok {
+			fmt.Fprintln(os.Stderr, "Data for card doesn't exist:", key)
+			os.Exit(1)
+		}
 		fmt.Fprintln(os.Stdout, str)
 
 		f.Close()
