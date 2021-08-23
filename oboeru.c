@@ -68,9 +68,11 @@ freenodes(Node *node)
 }
 
 static void
-cleanup(void)
+cleanup(Node *node, void *decks, void *reviews)
 {
-	freenodes(head);
+	freenodes(node);
+	free(decks);
+	free(reviews);
 }
 
 /* returns a filled out Card * after parsing */
@@ -347,11 +349,15 @@ main(int argc, char *argv[])
 	}
 
 	reviews = mkreviews(head);
-	if (reviews == NULL || cflag) {
-		cleanup();
-		free(reviews);
-		free(decks);
-		die("Cards Due: %ld\n", n_reviews);
+	if (reviews == NULL) {
+		cleanup(head, decks, reviews);
+		die("mkreviews()\n");
+	}
+
+	if (cflag) {
+		cleanup(head, decks, reviews);
+		printf("Cards Due: %ld\n", n_reviews);
+		return 0;
 	}
 
 	shuffle_reviews(reviews, n_reviews);
@@ -361,9 +367,7 @@ main(int argc, char *argv[])
 	for (i = 0; i < n_decks; i++)
 		write_deck(decks[i], i);
 
-	cleanup();
-	free(reviews);
-	free(decks);
+	cleanup(head, decks, reviews);
 
 	return 0;
 }
