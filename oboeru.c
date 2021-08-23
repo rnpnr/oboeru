@@ -178,9 +178,9 @@ bump_card(Card *card, int8_t status)
 
 	switch (status) {
 	case CARD_PASS:
-		if (diff < MINIMUM_INCREASE) {
-			/* extra 1s to avoid rounding errors */
-			card->due = t + MINIMUM_INCREASE + 1;
+		/* - 1s to avoid rounding error */
+		if (diff < MINIMUM_INCREASE - 1) {
+			card->due = t + MINIMUM_INCREASE;
 			return 1;
 		}
 		card->due = t + diff * GROWTH_RATE;
@@ -189,7 +189,7 @@ bump_card(Card *card, int8_t status)
 		if (diff > LEECH_AGE && !card->nobump)
 			card->leeches++;
 
-		if (diff * SHRINK_RATE < MINIMUM_INCREASE)
+		if (diff * SHRINK_RATE < MINIMUM_INCREASE - 1)
 			card->due = t + MINIMUM_INCREASE + 1;
 		else
 			card->due = t + diff * SHRINK_RATE;
