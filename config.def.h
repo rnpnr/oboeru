@@ -20,5 +20,9 @@
 /* card id formatting. needs to use ld */
 #define CARDID "%05ld"
 
+/* string used as a field delimiter */
+/* don't set this to a string that could appear in fields */
+#define DELIM "\t"
+
 /* format for times in the output deck file */
 const char *timefmt = "%Y年%m月%d日%H時%M分";

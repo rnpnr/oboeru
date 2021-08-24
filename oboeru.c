@@ -15,7 +15,6 @@
 #include "config.h"
 
 #define BUF_SIZE BUFSIZ
-#define DELIM "\t" /* fixed unless a better parser gets implemented */
 
 enum {
 	CARD_PASS,
@@ -36,7 +35,7 @@ typedef struct node {
 	struct node *next;
 } Node;
 
-static const char *scanfmt = "%ld" DELIM "%s" DELIM "%s" DELIM "%d" DELIM "%[^\n]";
+static const char *scanfmt = "%ld" DELIM "%[^"DELIM"]" DELIM "%[^"DELIM"]" DELIM "%d" DELIM "%[^\n]";
 static const char *logfmt = CARDID DELIM "%s" DELIM "%s" DELIM "%d" DELIM "%s\n";
 
 static Node *head;
