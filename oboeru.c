@@ -192,7 +192,7 @@ bump_card(Card *card, int8_t status)
 			card->leeches++;
 
 		if (diff * SHRINK_RATE < MINIMUM_INCREASE - 1)
-			card->due = t + MINIMUM_INCREASE + 1;
+			card->due = t + MINIMUM_INCREASE;
 		else
 			card->due = t + diff * SHRINK_RATE;
 		return 1;
