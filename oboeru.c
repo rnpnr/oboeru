@@ -348,15 +348,16 @@ main(int argc, char *argv[])
 	}
 
 	reviews = mkreviews(head);
-	if (reviews == NULL) {
-		cleanup(head, decks, reviews);
-		die("mkreviews()\n");
-	}
 
 	if (cflag) {
 		cleanup(head, decks, reviews);
 		printf("Cards Due: %ld\n", n_reviews);
 		return 0;
+	}
+
+	if (reviews == NULL) {
+		cleanup(head, decks, reviews);
+		die("mkreviews()\n");
 	}
 
 	shuffle_reviews(reviews, n_reviews);
