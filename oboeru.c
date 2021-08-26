@@ -22,12 +22,10 @@ enum {
 };
 
 typedef struct {
-	size_t id, deck;
-	int leeches;
-	/* seconds since epoch */
 	int64_t reviewed, due;
+	size_t id, deck;
 	char *extra;
-	int8_t nobump;
+	uint8_t leeches, nobump;
 } Card;
 
 typedef struct node {

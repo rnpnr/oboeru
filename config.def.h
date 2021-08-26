@@ -1,5 +1,5 @@
 /* number of times a mature card can be failed */
-/* before it is excluded from reviews */
+/* before it is excluded from reviews. must be <= 255 */
 #define MAX_LEECHES 4
 
 /* the minimum age in seconds for card to be considerd a leech */
