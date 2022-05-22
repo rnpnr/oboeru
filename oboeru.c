@@ -188,8 +188,11 @@ bump_card(Card *card, int8_t status)
 		if (diff < MINIMUM_INCREASE - 1) {
 			card->due = t + MINIMUM_INCREASE;
 			return 1;
+		} else if (diff > LEECH_AGE) {
+			card->due = t + diff * GROWTH_RATE + 24 * 3600 * (rand() % 2);
+		} else {
+			card->due = t + diff * GROWTH_RATE;
 		}
-		card->due = t + diff * GROWTH_RATE;
 		break;
 	case CARD_FAIL:
 		if (diff > LEECH_AGE && !card->nobump)
