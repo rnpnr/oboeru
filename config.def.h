@@ -17,7 +17,7 @@
 /* should be < 1. this leads to exponential decay */
 #define SHRINK_RATE (0.66)
 
-/* card id formatting. needs to use ld */
+/* card id formatting. needs a %ld */
 #define CARDID "%05ld"
 
 /* string used as a field delimiter */
@@ -26,3 +26,6 @@
 
 /* format for times in the output deck file */
 const char *timefmt = "%Y年%m月%d日%H時%M分";
+
+/* remaining reviews string. needs a %ld */
+const char *remfmt = "残り：%ld枚\n";

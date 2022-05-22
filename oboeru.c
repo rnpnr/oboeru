@@ -1,6 +1,7 @@
 /* See LICENSE for license details. */
 #include <fcntl.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,7 +38,7 @@ static const char *scanfmt = "%ld" DELIM "%[^"DELIM"]" DELIM "%[^"DELIM"]" DELIM
 static const char *logfmt = CARDID DELIM "%s" DELIM "%s" DELIM "%d" DELIM "%s\n";
 
 static Node *head;
-static size_t n_reviews;
+static size_t n_reviews, n_reviewed;
 
 /* option parsing variables */
 char *argv0;
@@ -48,6 +49,12 @@ static void
 usage(void)
 {
 	die("usage: %s [-cd] pipe deck [deck1 ...]\n", argv0);
+}
+
+static void
+sighandler(const int signo)
+{
+	fprintf(stderr, remfmt, n_reviews - n_reviewed);
 }
 
 static void
@@ -231,7 +238,7 @@ review_loop(Card *r[], const char *decks[], const char *fifo)
 		{ .str = "fail", .status = CARD_FAIL }
 	};
 
-	for (i = 0; i < n_reviews; i++) {
+	for (i = 0; i < n_reviews; i++, n_reviewed++) {
 		fprintf(stdout, "%s\t"CARDID"\n", decks[r[i]->deck], r[i]->id);
 		/* force a flush before blocking in open() */
 		fflush(stdout);
@@ -310,6 +317,7 @@ main(int argc, char *argv[])
 	Card **reviews;
 	size_t i, n_decks = 0;
 	const char *fifo = NULL, **decks = NULL;
+	struct sigaction sa;
 	struct stat sb;
 
 	ARGBEGIN {
@@ -335,9 +343,14 @@ main(int argc, char *argv[])
 			usage();
 	}
 
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_flags = SA_RESTART;
+	sa.sa_handler = sighandler;
+	sigaction(SIGUSR1, &sa, NULL);
+
 	tail = head = xmalloc(sizeof(Node));
 
-	/* remaining argv elements are deck jsons */
+	/* remaining argv elements are deck files */
 	for (i = 0; argc && *argv; argv++, i++, argc--) {
 		decks = xreallocarray(decks, ++n_decks, sizeof(char *));
 		decks[i] = *argv;
